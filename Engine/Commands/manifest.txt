@@ -1,0 +1,9 @@
+CheckAttrition.lua
+CheckWALIStatus.lua
+GetAlphaPointer.lua
+GetUnitReplenishable..lua
+SetArtillery.lua
+SetUnitReplenishable.lua
+UnitExp.lua
+UnitMaxSize.lua
+UnitSize.lua

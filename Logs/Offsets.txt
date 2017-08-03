@@ -1,0 +1,11 @@
+Unit Base Address
+
+NAVAL UNITS - 0030 - pointer
+	0014 - total crew size
+	00C8 - 00DC - crew sizes
+
+
+Offset - Unit Stats Pointer (AA) - 00e8 - pointer
+	Offset - Artillery Campaign - 0010
+	Offset - Ammunition - 00EC
+

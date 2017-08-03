@@ -1,0 +1,14 @@
+To load WALI start with the launcher. Make sure WALI.pack is loaded into the game (either in mod or movie format). For your selected campaign, you need to 
+edit the scripting.lua as follows:
+
+Near the top of the file (after the variables are declared) add the following:
+
+WALI = require "WALI/WALI"
+WALI.InitialiseAttrition()
+
+WALI.InitialiseAttrition() can be ommitted to remove attrition functionality. Any other defined commands can then be ran at any time using:
+
+WALI.commandName()
+
+where commandName is the name of the method
+

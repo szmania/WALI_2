@@ -1,0 +1,11 @@
+Log Created: 18:46.12
+[18:46.12]		[ting]loading episodic scripting
+[18:46.12]		[tom]Adding function: 0EF06498 to event UICreated
+[18:46.12]		[tom]Adding function: 0442BFE8 to event WorldCreated
+[18:46.12]		[tom]Adding function: 0442BF70 to event NewSession
+[18:46.12]		[tom]Adding function: 0EF05C78 to event UIDestroyed
+[18:46.12]		[tom]Adding function: 044370D0 to event CharacterSelected
+[18:46.13]		[ting]creating new game interface
+[18:46.22]		[ting]No saved heirarchy
+[18:48.21]		[ting]exiting campaign, saving heirarchy
+[18:48.23]		[tom]Removed function: 044370D0 from event CharacterSelected

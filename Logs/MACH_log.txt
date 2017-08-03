@@ -1,0 +1,15 @@
+Log Created: 19:54.34
+[19:54.34]		MACH.initialise_mach: Initializing Machiavelli's Mods.
+[19:54.34]		MACH_lib.build_character_names_list: Building characterNames_list[] list.
+[19:54.34]		MACH_lib.build_region_names_list: Building regionNames_list[] list.
+[19:54.34]		MACH_lib.build_settlement_names_list: Building settlementNames_list[] list.
+[19:54.34]		MACH_lib.build_artillery_to_gun_type_list: Building artyToGunType_list[] list.
+[19:54.41]		MACH.on_ui_created: UI Created.
+[19:54.41]		MACH.on_ui_created: Building global lists.
+[19:55.43]		MACH.on_component_left_click_up: Left Mouse Click Event.
+[19:55.43]		MACH.on_component_left_click_up: Left Mouse Click Event.
+[19:55.43]		MACH.on_component_left_click_up: Left Mouse Click Event.
+[19:55.44]		MACH.on_component_left_click_up: Left Mouse Click Event.
+[19:55.53]		MACH.on_component_left_click_up: Left Mouse Click Event.
+[19:55.53]		MACH.on_character_selected: Character Selected.
+[19:55.54]		MACH.on_component_left_click_up: Left Mouse Click Event.

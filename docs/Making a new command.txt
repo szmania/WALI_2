@@ -1,0 +1,33 @@
+To make a new command two entries need to be made in the folder:
+
+-WALI/Engine/Commands
+
+A command consists of two files - a .wcf file and a .lua file, both of the same name (case sensitive), and both residing in the commands directory. 
+The manifest (manifest.txt) lists all commands for use by the engine, but no editing of this file is neccessary - the launcher will validate commands and add them to
+the manifest automatically. You may not see this file, in this case there is no need to add it. Again, the launcher will handle it.
+
+For information on the .wcf file format, see the .wcf format readme in the commands directory
+
+The lua file must contain a function, which defines how the new command works. This function must in turn make a call to CreateWALIInterfaceLog(), which
+handles communicating with the WALI engine. The documentation for this command can be seen in the file /docs/Lua functions.txt. 
+
+To do this, make a new function* which includes at least three arguments: base address, command argument and optional header. Add more arguments if needed.
+In the function body you should convert the base address to one WALI can read (using the function convertCAAddressToHexPointer()) and then perform error checking
+as necessary. E.g. check that there are no nil variables and the type of command argument matches the type needed for this command.
+When these checks pass, use the function CreateWALIInterfaceLog to send the command to WALI. Remember to include the command keyword (in the example 
+below SET_CURRENT_UNIT_SIZE) and to pass on the other variables as appropriate.
+
+function SetCurrentUnitSize(base_pointer, command_argument, optionalHeader)
+	base_pointer = convertCAAddressToHexPointer(base_pointer)
+	if type(base_pointer) ~= "nil" and type(command_argument) ~= "nil" and  type(command_argument) == "number" then
+		CreateWALIInterfaceLog(base_pointer, "SET_CURRENT_UNIT_SIZE",  math.floor(command_argument), optionalHeader)
+	end
+	UpdateWALILuaLog("\t\tDone")
+end
+
+No further editing should be necessary, the engine handles all else after this.
+-----------------------
+Notes:
+-----------------------
+*Your command should then be useable in a game script by making the call WALI.CommandName(), where CommandName is the name of the function provided here, providing
+you have imported WALI correctly
