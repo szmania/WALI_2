@@ -264,4 +264,6 @@ FakesAssemblies/
 
 # Szmania
 Misc/esf.xml
-Logs/
+Logs/*
+_OLD/
+.idea/
