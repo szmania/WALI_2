@@ -3,11 +3,11 @@
 
 --unused code bits
 --[[
-		if noSupplyForces[faction] ~= nil then
-			if #noSupplyForces[faction] > 0 then
+		if noSupplyForces[faction_key] ~= nil then
+			if #noSupplyForces[faction_key] > 0 then
 
-				for m = 1, #noSupplyForces[faction] do
-					WALI.UpdateWALILuaLog(tostring(m)..":"..tostring(noSupplyForces[faction][m][1]).."-"..tostring(noSupplyForces[faction][m][2]).."-"..tostring(noSupplyForces[faction][m][3]))
+				for m = 1, #noSupplyForces[faction_key] do
+					WALI.UpdateWALILuaLog(tostring(m)..":"..tostring(noSupplyForces[faction_key][m][1]).."-"..tostring(noSupplyForces[faction_key][m][2]).."-"..tostring(noSupplyForces[faction_key][m][3]))
 				end
 			end
 		end
@@ -24,13 +24,13 @@
 events.ComponentLClickUp[#events.ComponentLClickUp+1] = function(context)
 	local IsArtillery = nil
 
-	if WALI_isOnCampMap == true then
+	if wali_is_on_campaign_map == true then
 		local ETS = CampaignUI.EntityTypeSelected()
 		if ETS.Character then
 			WALI.UpdateWALILuaLog("Char table")
-			charDetails = CampaignUI.InitialiseCharacterDetails(ETS.Entity)
+			character_details = CampaignUI.InitialiseCharacterDetails(ETS.Entity)
 			entities = CampaignUI.RetrieveContainedEntitiesFromCharacter(ETS.Entity, ETS.Entity)
-			for k, v in pairs(charDetails) do
+			for k, v in pairs(character_details) do
 			
 				WALI.UpdateWALILuaLog(tostring(k).."\t"..tostring(v))
 				if type(v) == "table" then
@@ -47,8 +47,8 @@ events.ComponentLClickUp[#events.ComponentLClickUp+1] = function(context)
 			end
 		elseif ETS.Unit then
 			WALI.UpdateWALILuaLog("Unit table")
-			charDetails = CampaignUI.InitialiseUnitDetails(ETS.Entity)
-			for k, v in pairs(charDetails) do
+			character_details = CampaignUI.InitialiseUnitDetails(ETS.Entity)
+			for k, v in pairs(character_details) do
 				WALI.UpdateWALILuaLog(tostring(k).."\t"..tostring(v))				
 				if type(v) == "table" then
 					for kk, vv in pairs(v) do					
@@ -91,7 +91,7 @@ end
 
 		--[[
 		local card_manager = UICardManager(false)
-		local exchange_group	= UIComponent( WALI_m_root:Find( "exchange_group" ) )
+		local exchange_group	= UIComponent( __wali_m_root__:Find( "exchange_group" ) )
 		local unit_list = {}
 		local dropped_unit = nil
 			local forcesList = CampaignUI.RetrieveFactionMilitaryForceLists("france", true)
@@ -159,7 +159,7 @@ end
 	--]]
 	
 			--[[
-		if WALI_isOnCampMap == true then
+		if wali_is_on_campaign_map == true then
 			local regions = CampaignUI.RegionsOwnedByFactionOrByProtectorates("france")
 			--WALI.UpdateWALILuaLog(regions[k].Name)
 			for k = 1, #regions do
@@ -223,7 +223,7 @@ end
 			
 			
 			--[[
-			local prisoners_land_battle = UIComponent(WALI_m_root:Find("prisoners_land_battle"))
+			local prisoners_land_battle = UIComponent(__wali_m_root__:Find("prisoners_land_battle"))
 			WALI.UpdateWALILuaLog(CampaignUI.PlayerFactionId().."-"..victor_Faction_Key)
 			if(CampaignUI.PlayerFactionId() == victor_Faction_Key) then
 
@@ -244,9 +244,9 @@ end
 			local ETS = CampaignUI.EntityTypeSelected()
 			if ETS.Character then
 				--WALI.UpdateWALILuaLog("Char table")
-				charDetails = CampaignUI.InitialiseCharacterDetails(ETS.Entity)
-				--WALI.UpdateWALILuaLog(charDetails.Address)
-				--CampaignUI.BuildFort(charDetails.Address)
+				character_details = CampaignUI.InitialiseCharacterDetails(ETS.Entity)
+				--WALI.UpdateWALILuaLog(character_details.Address)
+				--CampaignUI.BuildFort(character_details.Address)
 				local info = CampaignUI.ReviewPanelInfo()
 				WALI.UpdateWALILuaLog(info.commander)
 				if info.commander ~= nil then

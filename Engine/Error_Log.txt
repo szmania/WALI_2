@@ -550,3 +550,86 @@ WALI_Engine.exe:-8/19/2015 1:11:19 PM ==> Command Failure: SET_ARTILLERY
 **** WALI START ****
 
 WALI_Engine.exe:-12/24/2016 3:10:44 AM ==> WALI tried to open 0.WALI but it didn't exist!
+**** WALI START ****
+
+WALI_Engine.exe:-2/18/2019 2:25:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 2:25:28 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+**** WALI START ****
+
+WALI_Engine.exe:-2/18/2019 3:53:13 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 3:53:19 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+**** WALI START ****
+
+WALI_Engine.exe:-2/18/2019 4:29:00 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 4:29:05 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+**** WALI START ****
+
+WALI_Engine.exe:-2/18/2019 6:31:07 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+**** WALI START ****
+
+WALI_Engine.exe:-2/18/2019 6:57:15 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:47 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:47 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:47 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:47 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:47 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:47 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:48 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+WALI_Engine.exe:-2/18/2019 6:57:48 PM ==> Access to the path 'G:\Program Files (x86)\Empire Total War - Vanilla - MY MOD TESTING\data\WALI\Logs\FileLog.txt' is denied.
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 6:20:13 PM ==> get_campaign_unit_mulitplier.lua wasn't added to manifest (Did not have corresponding wcf file)
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 6:50:12 PM ==> GetCampaignUnitMulitplier.lua wasn't added to manifest (Did not have corresponding wcf file)
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 6:50:27 PM ==> GetCampaignUnitMulitplier.lua wasn't added to manifest (Did not have corresponding wcf file)
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 7:11:09 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 7:13:11 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 7:21:53 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 7:23:11 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 7:24:34 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 7:41:01 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 7:44:48 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 9:55:36 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER
+**** WALI START ****
+
+WALI_Engine.exe:-5/11/2019 10:04:49 PM ==> Command Failure: GET_CAMPAIGN_UNIT_MULTIPLIER

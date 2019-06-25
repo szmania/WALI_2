@@ -24,8 +24,10 @@ local manisfestLoaded = false
 local manifestError = ""
 local configLoaded = false
 local configError = ""
-local debugMode = true
+local debugMode = false
 local configFile = ""
+
+
 --[[--------------------------------------------------------------------------------
 		Section A:
 			Interface Writing/Reading
@@ -99,6 +101,7 @@ Returns:
 	n/a
 --]]
 function UpdateWALILuaLog(update_arg)
+	
 	if not debugMode then
 		return 
 	end
@@ -160,48 +163,56 @@ function readWALIReturnFile()
 	local value = nil
 	local fileOpened = false
 	
+	
 	--note that at this stage the file can be opened simultaneously in lua and C# (as lua opens it read-only)
 	--due to this lua can open the file and read it as C# is writing - see below for solution
 	while not fileOpened do
-		UpdateWALILuaLog("readWALIReturnFile, Attempt "..tostring(i).." to open "..tostring(filePath))
+		--UpdateWALILuaLog("readWALIReturnFile, Attempt "..tostring(e).." to open "..tostring(filePath))
 		i = i + 1
+		--CHANGED TO 900000 --MACH
 		if i > 900000 then
 			throwIngameWALIError("Function readWALIReturnFile has encountered an error (Error code 2) - WALI has potentially crashed, or is not responding\nWALI is now in an inconsistent state, please exit your game and report this error. Continued game play after this problem could corrupt your save game.")
 			return false
 		end
-		local e = 1
+		local e = 0
 		if fileExistsForRead(filePath) then
 			local contents = nil
 			local f = nil
 			--solution to above problem - keep looping until file contents don't equal nil (the attrition return file should *always* have something in it when C# is finished with it)
 			while contents == nil do
 				e = e + 1
-				if e > 2000 then
+				--CHANGED TO 900000 --MACH
+				if e > 900000 then
 					throwIngameWALIError("Function readWALIReturnFile has encountered an error (Error code 2a) - WALI has potentially crashed, or is not responding\nWALI is now in an inconsistent state, please exit your game and report this error. Continued game play after this problem could corrupt your save game.")
 					return false
 				end
 				f = io.open(filePath, "r")
-				UpdateWALILuaLog("\treadWALIReturnFile, Success. Handle:"..tostring(f))
+				--COMMENTED OUT --MACH
+				--UpdateWALILuaLog("\treadWALIReturnFile, Success. Handle:"..tostring(f))
 				contents = f:read()
-				UpdateWALILuaLog("\treadWALIReturnFile, Success. File Contents: "..tostring(contents)..", Attempt: "..tostring(e))
+				--COMMENTED OUT --MACH
+				--UpdateWALILuaLog("\treadWALIReturnFile, Success. File Contents: "..tostring(contents)..", Attempt: "..tostring(i))
 				f:close()
 			end
 			if contents == "0" then
 				value = false
 			elseif contents == "1" then
 				value = true
-			else
+			else 
 				value = contents
-			end			--attempt to delete the file; if it fails, inform the user. deleteFile logs failure internally
+			end
+			--attempt to delete the file; if it fails, inform the user. deleteFile logs failure internally
 			if not deleteFile(filePath) then
 				throwIngameWALIError("Function readWALIReturnFile has encountered an error (Error code 3) - WALI has potentially crashed, or is not responding\nWALI is now in an inconsistent state, please exit your game and report this error. Continued game play after this problem could corrupt your save game.")
 				return false
 			end
 			fileOpened = true
-			UpdateWALILuaLog("\treadWALIReturnFile, Success. Returning: "..tostring(value)..", Total contents: "..tostring(contents).."\t, Handle:"..tostring(f))
+			--COMMENTED OUT --MACH
+			--UpdateWALILuaLog("\treadWALIReturnFile, Success. Returning: "..tostring(value)..", Total contents: "..tostring(contents).."\t, Handle:"..tostring(f))
 			break
 		else
-			UpdateWALILuaLog("\treadWALIReturnFile, Could not find or access "..tostring(filePath))
+			--COMMENTED OUT --MACH
+			--UpdateWALILuaLog("\treadWALIReturnFile, Could not find or access "..tostring(filePath))
 		end
 	end
 	return value
@@ -242,11 +253,12 @@ Returns:
 	true for success, else false
 --]]
 function deleteFile(fileName)
-	UpdateWALILuaLog("Deleting file: "..tostring(fileName))
+	--UpdateWALILuaLog("Deleting file: "..tostring(fileName))
 	local i = 0
 	fail = os.remove(fileName) --returns nil if failed, true if successful
 	while fail == nil do
-		UpdateWALILuaLog("deleteFile, File deletion failed on attempt: "..tostring(i)..", retrying")
+		--COMMENTED OUT --MACH
+		--UpdateWALILuaLog("deleteFile, File deletion failed on attempt: "..tostring(i)..", retrying")
 		i = i + 1
 		fail = false
 		fail = os.remove(fileName)
@@ -255,7 +267,6 @@ function deleteFile(fileName)
 			return false
 		end
 	end
-	UpdateWALILuaLog("Successfully deleted file: "..tostring(fileName))
 	return true
 end
 
@@ -314,7 +325,6 @@ end
 		n/a
 --]]
 local function InformSuccessfullWALIStart()
-	UpdateWALILuaLog("InformSuccessfullWALIStart - Started")
 	CheckWALIStatus("Checking from InformSuccessfullWALIStart")
 	local utils = require("Utilities")
 	local panel_manager = utils.Require("panelmanager")
@@ -341,7 +351,6 @@ local function InformSuccessfullWALIStart()
 		--All stuff imported, open it up
 		panel_manager.OpenPanel("dialogue_box", false, "Initialise", "WALI has failed to start (Error code 1) - WALI has potentially crashed, or is not responding\nWALI is now in an inconsistent state, please exit your game and report this error. Continued game play after this problem could corrupt your save game.")
 	end
-	UpdateWALILuaLog("InformSuccessfullWALIStart - Finished")
 end
 
 --[[
@@ -429,6 +438,7 @@ else
 	configLoaded = true
 end
 
+
 events.UICreated[#events.UICreated+1] = function(context)
 	--Make sure the battle UI isn't after loading
 	if context.string == "Campaign UI" then
@@ -450,16 +460,21 @@ end
 
 
 
+
 --[[--------------------------------------------------------------------------------
 		TEST CODE
 ----------------------------------------------------------------------------------]]
---[[	events.ComponentLClickUp[#events.ComponentLClickUp+1] = function(context)
+
+--[[
+events.ComponentLClickUp[#events.ComponentLClickUp+1] = function(context)
+
+	if wali_is_on_campaign_map == true then
 		local ETS = CampaignUI.EntityTypeSelected()
 		if ETS.Character then
 			UpdateWALILuaLog("Char table")
-			charDetails = CampaignUI.InitialiseCharacterDetails(ETS.Entity)
+			character_details = CampaignUI.InitialiseCharacterDetails(ETS.Entity)
 			entities = CampaignUI.RetrieveContainedEntitiesFromCharacter(ETS.Entity, ETS.Entity)
-			for k, v in pairs(charDetails) do
+			for k, v in pairs(character_details) do
 				UpdateWALILuaLog(tostring(k).."\t"..tostring(v))
 				if type(v) == "table" then
 					for kk, vv in pairs(v) do
@@ -474,11 +489,11 @@ end
 			end
 		elseif ETS.Unit then
 			UpdateWALILuaLog("Unit table")
-			charDetails = CampaignUI.InitialiseUnitDetails(ETS.Entity)
-			for k, v in pairs(charDetails) do
-				UpdateWALILuaLog(tostring(k).."\t"..tostring(v))
+			character_details = CampaignUI.InitialiseUnitDetails(ETS.Entity)
+			for k, v in pairs(character_details) do
+				UpdateWALILuaLog(tostring(k).."\t"..tostring(v))				
 				if type(v) == "table" then
-					for kk, vv in pairs(v) do
+					for kk, vv in pairs(v) do					
 						UpdateWALILuaLog("\t\t"..tostring(kk).."\t"..tostring(vv))
 						if type(vv) == "table" then
 							for kkk, vvv in pairs(vv) do
@@ -489,7 +504,9 @@ end
 				end
 			end
 		end
-	end	--]]
+	end
+end	
+--]]
 
 --[[--------------------------------------------------------------------------------
 		Section C:
@@ -565,6 +582,7 @@ function InitialiseAttrition()
 			end
 		end
 	end
+	
 	--[[
 	Description:
 		Character selected event
@@ -592,17 +610,20 @@ function InitialiseAttrition()
 					charDetails =  CampaignUI.InitialiseCharacterDetails(unitDetails.CharacterPtr)
 					armyInfotable.CharacterAddress, WALI_previouslySelectedCharacterPointer = unitDetails.CharacterPtr
 				end
-				--UpdateWALILuaLog("\tCharacterSelected, Finding pip")
+				UpdateWALILuaLog("\tCharacterSelected, Finding pip")
+				
 				local c = WALI_m_root:Find("WALI_AttritionPip")
-				--UpdateWALILuaLog("\t\tCharacterSelected, Found pip!")
+				UpdateWALILuaLog("\t\tCharacterSelected, Found pip!")
 				
 				--if the character is in a friendly region don't bother requesting positional from wali
 				if isCharacterInSafeRegion(armyInfotable.CharacterAddress) or isLocationAFort(CampaignUI.InitialiseCharacterDetails(armyInfotable.CharacterAddress).Location) then
 					UpdateWALILuaLog("\t\tCharacter is in a friendly region, setting pip without WALI call")
-						UIComponent(c):SetState("NoAttrition")
-						UpdateWALILuaLog("\tCharacterSelected, NoAttrition")
-						UIComponent(c):SetTooltipText("This army is not suffering attrition")
-						UIComponent(c):SetVisible(true)
+					--COMMENTED OUT --MACH
+					--UIComponent(mach_logistics_pip):SetState("NoAttrition")
+					UpdateWALILuaLog("\tCharacterSelected, NoAttrition")
+					--COMMENTED OUT --MACH
+					--UIComponent(mach_logistics_pip):SetTooltipText("This army is not suffering attrition")
+					--UIComponent(mach_logistics_pip):SetVisible(true)
 				else
 					--character isn't in a safe region (or a fort in enemy territory), so disable replenishment
 					setReplenishTooltip("This army is not in a friendly region and it's units cannot be replenished")
@@ -610,24 +631,25 @@ function InitialiseAttrition()
 					enableFortButton(true)
 					setReplenishTooltip("This army is not in a friendly region and it's units cannot be replenished")
 					--set the attrition pip and tooltip
+					
 					UIComponent(c):SetState("HasAttrition")
 					UIComponent(c):SetTooltipText("This army is suffering attrition")
 					UIComponent(c):SetVisible(true)	
 				end
-				--UpdateWALILuaLog("CharacterSelected, Is first click on army, starting points: "..tostring(charDetails.ActionPoints))
+				UpdateWALILuaLog("CharacterSelected, Is first click on army, starting points: "..tostring(charDetails.ActionPoints))
 				--if character hasn't any movepoints we dont need to waste time watching for changes
 				if charDetails.ActionPoints ~= 0 then
 					armyInfotable.StartingPoints = charDetails.ActionPoints
-					--UpdateWALILuaLog("\tCharacterSelected, Trigger queuing")
+					UpdateWALILuaLog("\tCharacterSelected, Trigger queuing")
 					scripting.game_interface:add_time_trigger("MoveWatch", .5)
-					--UpdateWALILuaLog("\tCharacterSelected, Trigger queued")
+					UpdateWALILuaLog("\tCharacterSelected, Trigger queued")
 				end
 			else
 				UpdateWALILuaLog("\tCharacterSelected, Trigger not queued")
 			end
 		end
 	end
-	
+
 	--[[
 	Description:
 		Monitors movepoint changes, using time triggers to perform checks.
@@ -652,10 +674,12 @@ function InitialiseAttrition()
 			--if the character is in a friendly region don't bother requesting positional from wali
 			if isCharacterInSafeRegion(address) or isLocationAFort(CampaignUI.InitialiseCharacterDetails(address).Location) then
 				UpdateWALILuaLog("\t\tCharacter is in a friendly region, setting pip without WALI call")
-				UIComponent(c):SetState("NoAttrition")
-				--UpdateWALILuaLog("\watchForChanges, NoAttrition")
-				UIComponent(c):SetTooltipText("This army is not suffering attrition")
-				UIComponent(c):SetVisible(true)
+				--COMMENTED THIS OUT TO PREVENT FROM SHOWING NOATTRITION ICON
+				--UIComponent(mach_logistics_pip):SetState("NoAttrition")
+				UpdateWALILuaLog("\watchForChanges, NoAttrition")
+				--COMMENTED OUT --MACH
+				--UIComponent(mach_logistics_pip):SetTooltipText("This army is not suffering attrition")
+				--UIComponent(mach_logistics_pip):SetVisible(true)
 			else
 				--character isn't in a safe region (or a fort in enemy territory), so disable replenishment
 				setReplenishTooltip("This army is not in a friendly region and it's units cannot be replenished")
@@ -670,9 +694,9 @@ function InitialiseAttrition()
 			--if character hasn't any movepoints we dont need to waste time watching for changes
 			if charDetails.ActionPoints ~= 0 then
 				armyInfotable.StartingPoints = charDetails.ActionPoints
-				--UpdateWALILuaLog("\watchForChanges, Trigger queuing")
+				UpdateWALILuaLog("\watchForChanges, Trigger queuing")
 				scripting.game_interface:add_time_trigger("MoveWatch", .5)
-				--UpdateWALILuaLog("\watchForChanges, Trigger queued")
+				UpdateWALILuaLog("\watchForChanges, Trigger queued")
 			end
 			
 			armyInfotable.LastPointsSample = charDetails.ActionPoints
@@ -719,7 +743,7 @@ function InitialiseAttrition()
 						for k,v in pairs(entities.Units) do
 							local damage, reference = calculateAttritionDamage(v.Men)
 							SetCurrentUnitSize(v.Address, damage, "Unit: "..tostring(v.Name).."Commanders Name: "..tostring(v.CommandersName).."Random number reference: "..tostring(reference))
-							SetUnitReplenishable(v.Address, v.UnitRecord.Men, "Setting \"replenish to\" value to"..v.UnitRecord.Men)
+							--SetUnitReplenishable(v.Address, v.UnitRecord.Men, "Setting \"replenish to\" value to"..v.UnitRecord.Men)
 						end
 				else
 					UpdateWALILuaLog("\t"..forcesList[i].Location.." is player owned")
@@ -894,3 +918,8 @@ function InitialiseAttrition()
 		UIComponent(c):SetTooltipText(tostring(arg))
 	end
 end
+
+
+
+
+

@@ -435,7 +435,8 @@ namespace WALI_Engine
                             {
                                 // Perform the command
                                 int bytesEdited;
-                                bool complete = PerformCommand(cmd, address, value, out bytesEdited);
+                                LogWALI(file, cmd.Activator + " (Calling)");
+                                bool complete = PerformCommand(cmd, address, value, file, out bytesEdited);
                                 LogWALI(file, cmd.Activator + " (Success:" + complete + ")");
 
                                 if (complete == false)
@@ -611,11 +612,14 @@ namespace WALI_Engine
         /// <param name="cmd">The command object to use</param>
         /// <param name="address">The memory address to work at</param>
         /// <param name="value">The value to work with</param>
+        /// <param name="file">The .WALI file it is processing</param>
         /// <returns></returns>
-        private bool PerformCommand(Command cmd, string address, string value, out int bytesEdited)
+        private bool PerformCommand(Command cmd, string address, string value, string file, out int bytesEdited)
         {
             //10/08/2012: Int32.Parse wasn't provided the correct args, causing it to trip over hex numbers
             //Added System.Globalization.NumberStyles.HexNumber to fix this.
+            LogWALI(file, "PerformCommand called, arguments: " + address + ", " + value + ", " + file);
+
             bool worked = false;
             bytesEdited = 0;
             //MACHIAVELLI
@@ -639,8 +643,8 @@ namespace WALI_Engine
                     //unitReplenishableAmount = BitConverter.ToInt32(buffer, 0);
 
                     returnValue = int.Parse(tempStr, System.Globalization.NumberStyles.HexNumber);
+                    LogWALI(file, "Integer value returned: " + returnValue.ToString());
                     TellLUA(returnValue.ToString());
-                    //TellLUA(unitReplenishableAmount);
                     worked = true;
 
                 }
@@ -656,8 +660,31 @@ namespace WALI_Engine
                                         Array.Reverse(buffer);
 
                     returnPointer = BitConverter.ToString(buffer).Replace("-", "");
-                                    
-                    TellLUA(returnPointer);
+
+                    LogWALI(file, "Returned pointer: " + returnPointer.ToString());
+                    TellLUA(returnPointer.ToString());
+                    worked = true;
+                }
+                else if (cmd.Type == "float") // 4 Bytes
+                {
+                    LogWALI(file, "Getting \"float\" type for value address space at address: " + address.ToString());
+
+                    float returnValue;
+                    int bytesRead;
+                    int memoryPosition = Int32.Parse(address, System.Globalization.NumberStyles.HexNumber) + cmd.StartByte;
+                    byte[] buffer = ReadMemory(memoryPosition, sizeof(float), out bytesRead);
+                    if (BitConverter.IsLittleEndian)
+                        Array.Reverse(buffer);
+
+                    //string tempStr = BitConverter.ToString(buffer).Replace("-", "");
+
+                    returnValue = BitConverter.ToSingle(buffer, 0);
+                    //LogWALI(file, "tempFloat: " + returnValue.ToString());
+                    //unitReplenishableAmount = BitConverter.ToInt32(buffer, 0);
+
+                    //returnValue = float.Parse(tempStr, System.Globalization.NumberStyles.HexNumber);
+                    LogWALI(file, "Float return value: " + returnValue.ToString());
+                    TellLUA(returnValue.ToString());
                     worked = true;
                 }
             }
@@ -712,7 +739,6 @@ namespace WALI_Engine
 
                     worked = WriteByteArray(memoryPosition, byteArray, out bytesEdited);
                 }
-
             }
             return worked;
         }

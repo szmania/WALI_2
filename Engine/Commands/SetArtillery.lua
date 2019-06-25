@@ -17,7 +17,7 @@ Returns:
 --]]
 function SetArtillery(base_pointer, command_argument, optionalHeader)
 	--base_pointer = convertCAAddressToHexPointer(base_pointer)
-	if type(base_pointer) ~= "nil" --[[and type(base_pointer) == "number" --]] and type(command_argument) ~= "nil" and  type(command_argument) == "number" then
+	if type(base_pointer) ~= "nil" --[[and type(base_pointer) == "number" --]] and type(command_argument) ~= "nil" and type(command_argument) == "number" then
 		CreateWALIInterfaceLog(base_pointer, "SET_ARTILLERY", command_argument, optionalHeader)
 	end
 end

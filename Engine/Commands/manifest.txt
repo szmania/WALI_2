@@ -1,7 +1,8 @@
 CheckAttrition.lua
 CheckWALIStatus.lua
 GetAlphaPointer.lua
-GetUnitReplenishable..lua
+GetCampaignUnitMultiplier.lua
+GetUnitReplenishable.lua
 SetArtillery.lua
 SetUnitReplenishable.lua
 UnitExp.lua

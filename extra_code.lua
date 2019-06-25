@@ -368,12 +368,12 @@
 		UpdateMACHLuaLog("\t\t TEST: Running Test() function")
 
 		local factionsList = CampaignUI.RetrieveFactionListForDiplomacy()
-		UpdateMACHLuaLog("\t\t TEST: ".."getting faction list")
+		UpdateMACHLuaLog("\t\t TEST: ".."getting faction_key list")
 
 		for k, v in pairs(factionsList) do
 			if conditions.FactionName(v.Key, context) then
 				faction_turn = v.Key
-				UpdateMACHLuaLog("\t\t TEST faction turn: "..tostring(faction_turn))
+				UpdateMACHLuaLog("\t\t TEST faction_key turn: "..tostring(faction_turn))
 
 			end
 		end
