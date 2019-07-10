@@ -1,3 +1,5 @@
+Originally created by .Mitch and TC.
+
 Engine:		Contains engine source files
 Interface:	Directory used for WALI -> Lua and Lua -> WALI communication
 Logs:		Directory used to output logs, from both WALI and Lua. 
@@ -14,3 +16,5 @@ WALI.pack:			Contains a packed version of the UI files, needed for the scripting
 					is currently in mod format
 
 More Details: http://www.twcenter.net/forums/showthread.php?604949-W-A-L-I
+
+Spacial thanks to VadAntS for inspiration.
