@@ -263,9 +263,11 @@ FakesAssemblies/
 *.opt
 
 # Machiavelli
+*.backup
 .idea/
 _OLD/
 docs/
+Engine/Engine_src - backup
 Interface/LW/*
 Misc/*
 WIP/*
