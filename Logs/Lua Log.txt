@@ -1,0 +1,18 @@
+Log Created: 22:45.57
+[22:45.57]		Loading command extension CheckAttrition.lua
+[22:45.57]		Loading command extension CheckWALIStatus.lua
+[22:45.57]		Loading command extension GetAlphaPointer.lua
+[22:45.57]		Loading command extension GetCampaignUnitMultiplier.lua
+[22:45.57]		Loading command extension GetUnitReplenishable.lua
+[22:45.57]		Loading command extension SetArtillery.lua
+[22:45.57]		Loading command extension SetUnitReplenishable.lua
+[22:45.57]		Loading command extension UnitExp.lua
+[22:45.57]		Loading command extension UnitMaxSize.lua
+[22:45.57]		Loading command extension UnitSize.lua
+[22:45.57]		Manifest Read Success
+[22:45.57]		Loaded config: 1	7
+[22:45.57]		Config Read Success
+[22:46.01]		InformSuccessfullWALIStart - Started
+[22:46.01]		Deleting file: data/WALI/Interface/WL/startup.txt
+[22:46.01]		Successfully deleted file: data/WALI/Interface/WL/startup.txt
+[22:46.01]		InformSuccessfullWALIStart - Finished
