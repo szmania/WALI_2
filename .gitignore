@@ -7,7 +7,7 @@
 *.com
 *.class
 *.dll
-*.exe
+#*.exe
 *.pdb
 *.dll.config
 *.cache
