@@ -267,6 +267,6 @@ FakesAssemblies/
 _OLD/
 docs/
 Interface/LW/*
-Logs/
-Misc/esf.xml
-WIP/
+Logs/*
+Misc/*
+WIP/*
