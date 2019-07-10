@@ -307,6 +307,25 @@ function get_artillery_num_from_men_count(men)
 end
 
 
+function get_battle_faction_names_str(faction_ids)
+	update_mach_lua_log('Getting faction names str from faction ids list.')
+	local faction_names_str = ''
+	for faction_id_idx = 1, #faction_ids do
+		local faction_id = faction_ids[faction_id_idx]
+		if faction_id_idx == 1 then
+			faction_names_str = get_faction_screen_name_from_faction_id(faction_id)
+		else
+			faction_names_str = faction_names_str..", "..get_faction_screen_name_from_faction_id(faction_id)
+		end
+	end
+	if faction_names_str == '' then
+		faction_names_str = 'Rebels'
+	end
+	update_mach_lua_log(string.format('Finished getting faction names str from faction ids list. Faction names str: "%s"', faction_names_str))
+	return faction_names_str
+end
+
+
 function get_battles_with_character_name(character_name, faction_id)
 	update_mach_lua_log(string.format('Getting battles with character name "%s" of faction "%s".', character_name, faction_id))
 	local battles_list = {}
@@ -981,6 +1000,16 @@ function get_mach_saved_games_list()
 end
 
 
+--function get_mach_saved_games_list()
+--	update_mach_lua_log(string.format('Getting Machiavelli Mod saved games list.'))
+--	local extension, path = CampaignUI.FileExtenstionAndPathForWriteClass("save_game")
+--	local mach_saved_games_list_path = path..'mach_mod\\saved_games_list.txt'
+--	local mach_saved_games_list = load_table_from_file(mach_saved_games_list_path)
+--	update_mach_lua_log(string.format('Finished getting Machiavelli Mod saved games list.'))
+--	return mach_saved_games_list
+--end
+
+
 function get_nationality_from_faction_id(faction_id, location)
 	update_mach_lua_log(string.format('Getting nationality from faction id: "%s"', faction_id))
 	location = location or nil
@@ -1366,11 +1395,13 @@ end
 
 function load_mach_save_game(mach_loaded_game_id)
 	update_mach_lua_log(string.format('Loading Machiavelli Mod game with game ID: %s', mach_loaded_game_id))
-	local loaded_game_file_name = mach_loaded_game_id..'.mach_save'
+	mach_data.__mach_saved_games_list__ = get_mach_saved_games_list()
+	local empire_save_game_file_name_no_ext = mach_data.__mach_saved_games_list__[mach_loaded_game_id].FileName:gsub(".empire_save", "")
+	local loaded_game_file_name = empire_save_game_file_name_no_ext..'.mach_save'
+--	local loaded_game_file_name = mach_loaded_game_id..'.mach_save'
 	local extension, path = CampaignUI.FileExtenstionAndPathForWriteClass("save_game")
 	local mach_load_game_file_path = path..'mach_mod\\'..loaded_game_file_name
 	local loaded_tbl = load_table_from_file(mach_load_game_file_path)
-	load_mach_saved_games_list()
 	mach_data.__battles_list__ = loaded_tbl['__battles_list__']
 --	if type(loaded_tbl['__battles_list__'][1].is_naval_battle, "boolean") then
 --		update_mach_lua_log(loaded_tbl['__battles_list__'][1].is_naval_battle)
@@ -1379,16 +1410,6 @@ function load_mach_save_game(mach_loaded_game_id)
 --	output_table_to_mach_log(loaded_tbl['__battles_list__'][1].pre_battle_units_list, 1)
 --	output_table_to_mach_log(loaded_tbl['__battles_list__'][1].pre_battle_units_list['france'], 1)
 	update_mach_lua_log(string.format('Finished loading Machiavelli Mod saved game.'))
-	return true
-end
-
-
-function load_mach_saved_games_list()
-	update_mach_lua_log(string.format('Loading Machiavelli Mod saved games list.'))
-	local extension, path = CampaignUI.FileExtenstionAndPathForWriteClass("save_game")
-	local mach_saved_games_list_path = path..'mach_mod\\saved_games_list.txt'
-	mach_data.__mach_saved_games_list__ = load_table_from_file(mach_saved_games_list_path)
-	update_mach_lua_log(string.format('Finished loading Machiavelli Mod saved games list.'))
 	return true
 end
 
@@ -1525,6 +1546,8 @@ function on_loading_game(context)
 		if not load_mach_save_game(mach_loaded_game_id) then
 			update_mach_lua_log("Error, could not load Machiavelli Mod saved game!")
 		end
+	else
+		update_mach_lua_log("MACH save game id value is -1. No MACH save game associated with Empire save!")
 	end
 	update_mach_lua_log("MACH LIB - Finished LoadingGame.")
 end
@@ -1629,13 +1652,14 @@ end
 
 function output_obj_attributes_to_mach_log(obj)
 	update_mach_lua_log("Outputting object attributes to mach log.")
-	for key,value in pairs(getmetatable(context)) do
+	for key,value in pairs(getmetatable(obj)) do
 		update_mach_lua_log("Found obj member: " .. key);
 	end
 end
 
 function output_obj_to_mach_log(obj, tab_num)
 	update_mach_lua_log("Outputting object to mach log.")
+	tab_num = tab_num or 1
 	local tab_str = '\t'
 	for idx = 1, tab_num do
 		tab_str = '\t'..tostring(tab_str)
@@ -1715,6 +1739,80 @@ function output_table_to_mach_log(tbl, level)
 end
 
 
+function remove_str_accents(str)
+	update_mach_lua_log(string.format('Removing accents from string: %s', str))
+	local table_accents = {}
+	table_accents["À"] = "A"
+	table_accents["Á"] = "A"
+	table_accents["Â"] = "A"
+	table_accents["Ã"] = "A"
+	table_accents["Ä"] = "A"
+	table_accents["Å"] = "A"
+	table_accents["Æ"] = "AE"
+	table_accents["Ç"] = "C"
+	table_accents["È"] = "E"
+	table_accents["É"] = "E"
+	table_accents["Ê"] = "E"
+	table_accents["Ë"] = "E"
+	table_accents["Ì"] = "I"
+	table_accents["Í"] = "I"
+	table_accents["Î"] = "I"
+	table_accents["Ï"] = "I"
+	table_accents["Ð"] = "D"
+	table_accents["Ñ"] = "N"
+	table_accents["Ò"] = "O"
+	table_accents["Ó"] = "O"
+	table_accents["Ô"] = "O"
+	table_accents["Õ"] = "O"
+	table_accents["Ö"] = "O"
+	table_accents["Ø"] = "O"
+	table_accents["Ù"] = "U"
+	table_accents["Ú"] = "U"
+	table_accents["Û"] = "U"
+	table_accents["Ü"] = "U"
+	table_accents["Ý"] = "Y"
+	table_accents["Þ"] = "P"
+	table_accents["ß"] = "s"
+	table_accents["à"] = "a"
+	table_accents["á"] = "a"
+	table_accents["â"] = "a"
+	table_accents["ã"] = "a"
+	table_accents["ä"] = "a"
+	table_accents["å"] = "a"
+	table_accents["æ"] = "ae"
+	table_accents["ç"] = "c"
+	table_accents["è"] = "e"
+	table_accents["é"] = "e"
+	table_accents["ê"] = "e"
+	table_accents["ë"] = "e"
+	table_accents["ì"] = "i"
+	table_accents["í"] = "i"
+	table_accents["î"] = "i"
+	table_accents["ï"] = "i"
+	table_accents["ð"] = "eth"
+	table_accents["ñ"] = "n"
+	table_accents["ò"] = "o"
+	table_accents["ó"] = "o"
+	table_accents["ô"] = "o"
+	table_accents["õ"] = "o"
+	table_accents["ö"] = "o"
+	table_accents["ø"] = "o"
+	table_accents["ù"] = "u"
+	table_accents["ú"] = "u"
+	table_accents["û"] = "u"
+	table_accents["ü"] = "u"
+	table_accents["ý"] = "y"
+	table_accents["þ"] = "p"
+	table_accents["ÿ"] = "y"
+
+	local normalised_string = ''
+
+	local normalised_string = str: gsub("[%z\1-\127\194-\244][\128-\191]*", table_accents)
+	update_mach_lua_log(string.format('Finished removing accents from string. String with accents removed: %s', normalised_string))
+	return normalised_string
+end
+
+
 -- Round value to given decimal places
 -- @param num: value to be rounded as dboule
 -- @param idp: number of decimal places as integer
@@ -1733,7 +1831,8 @@ function save_mach_save_game()
 	local latest_save_game = get_latest_save_game()
 	local extension, path = CampaignUI.FileExtenstionAndPathForWriteClass("save_game")
 	os.execute('mkdir "'..path..'mach_mod"')
-	local mach_save_game_file_path = path..'mach_mod\\'..__mach_save_game_id__..'.mach_save'
+	local empire_save_game_file_name_no_ext = latest_save_game.FileName:gsub(".empire_save", "")
+	local mach_save_game_file_path = path..'mach_mod\\'..empire_save_game_file_name_no_ext..'.mach_save'
 	update_mach_lua_log(string.format('Saving MACH save game to: "%s"', mach_save_game_file_path))
 	mach_data.__mach_saved_games_list__[__mach_save_game_id__] = latest_save_game
 	save_mach_saved_games_list()

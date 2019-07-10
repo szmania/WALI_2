@@ -25,10 +25,10 @@ function Army:new (character_details, faction_id, character_context)
 		end
 		self.is_on_fleet, self.fleet_on = mach_lib.is_army_obj_on_fleet(self.faction_id, self.obj)
 	elseif character_context then
-		self.is_in_settlement = nil
+		self.is_in_settlement = false
 		self.settlement_in_region_id = self.location
 		self.settlement_in_id = nil
-		self.is_on_fleet = nil
+		self.is_on_fleet = false
 		self.fleet_on = nil
 	end
 
@@ -51,10 +51,10 @@ function Battle:new ()
 			location = nil;
 			year = mach_lib.__current_year__;
 			turn = mach_lib.__current_turn__;
-			is_naval_battle = nil;
-			is_major_battle = nil;
+			is_major_battle = false;
+			is_naval_battle = false;
 			is_player_battle = false;
-			is_siege = nil;
+			is_siege = false;
 			besieged_settlement_id = nil;
 			besieged_settlement_name = nil;
 			winner_faction_ids = {};
@@ -114,14 +114,24 @@ function Battle:new ()
 			post_battle_winner_units_list = {};
 			post_battle_loser_units = 0;
 			post_battle_loser_units_list = {};
-			winner_ship_casualties = 0;
-			winner_ship_casualties_list = {};
-			loser_ship_casualties = 0;
-			loser_ship_casualties_list = {};
+			winner_commander_casualties_list = {};
 			winner_unit_casualties = 0;
 			winner_unit_casualties_list = {};
+			winner_unit_prizes = 0;
+			winner_unit_prizes_list = {};
+			winner_ship_casualties = 0;
+			winner_ship_casualties_list = {};
+			winner_ship_prizes = 0;
+			winner_ship_prizes_list = {};
+			loser_commander_casualties_list = {};
 			loser_unit_casualties = 0;
 			loser_unit_casualties_list = {};
+			loser_unit_captured = 0;
+			loser_unit_captured_list = {};
+			loser_ship_captured = 0;
+			loser_ship_captured_list = {};
+			loser_ship_casualties = 0;
+			loser_ship_casualties_list = {};
 			total_soldier_casualties = 0;
 			total_ship_casualties = 0;
 			total_ship_casualties_list = {};
@@ -219,7 +229,7 @@ function Battle:add_loser_military_force (loser_military_force, is_pre_battle, i
 		mach_lib.update_mach_lua_log('Post-Battle loser')
 		self.post_battle_loser_military_forces[#self.post_battle_loser_military_forces+1] = loser_military_force
 
-		self.post_battle_loser_soldiers = self.post_battle_loser_soldiers + loser_military_force.num_of_ships
+		self.post_battle_loser_soldiers = self.post_battle_loser_soldiers + loser_military_force.num_of_soldiers
 		self.post_battle_loser_ships = self.post_battle_loser_ships + loser_military_force.num_of_ships
 		self.post_battle_loser_units = self.post_battle_loser_units + loser_military_force.num_of_units
 
@@ -238,11 +248,32 @@ function Battle:add_loser_military_force (loser_military_force, is_pre_battle, i
 	self.loser_ship_casualties = self.pre_battle_loser_ships - self.post_battle_loser_ships
 	self.loser_unit_casualties = self.pre_battle_loser_units - self.post_battle_loser_units
 
+	self.loser_commander_casualties_list = {}
+	for pre_battle_military_force_idx, pre_battle_military_force in pairs(self.pre_battle_loser_military_forces) do
+		self.loser_commander_casualties_list[pre_battle_military_force.faction_id] = self.loser_commander_casualties_list[pre_battle_military_force.faction_id] or {}
+		local commander_found = false
+		for post_battle_military_force_idx, post_battle_military_force in pairs(self.post_battle_loser_military_forces) do
+			if post_battle_military_force.num_of_units == 0 and post_battle_military_force.num_of_ships == 0 then
+				break
+			elseif pre_battle_military_force.commander_type_and_name == post_battle_military_force.commander_type_and_name then
+				commander_found = true
+				mach_lib.update_mach_lua_log(string.format('Loser commander not killed in battle: %s', pre_battle_military_force.commander_type_and_name))
+			end
+		end
+		if not commander_found then
+			mach_lib.update_mach_lua_log(string.format('Loser commander killed in battle: %s', pre_battle_military_force.commander_type_and_name))
+			self.loser_commander_casualties_list[pre_battle_military_force.faction_id][#self.loser_commander_casualties_list[pre_battle_military_force.faction_id]+1] = pre_battle_military_force.commander_type_and_name
+		end
+	end
 	self.loser_ship_casualties_list =  _subtract_unit_tables_in_faction_keys(self.pre_battle_loser_ships_list, self.post_battle_loser_ships_list)
-
 	self.loser_unit_casualties_list =  _subtract_unit_tables_in_faction_keys(self.pre_battle_loser_units_list, self.post_battle_loser_units_list)
 
 	self.total_soldier_casualties = self.pre_battle_soldiers - self.post_battle_soldiers
+
+	mach_lib.update_mach_lua_log('gibberish')
+	mach_lib.update_mach_lua_log(self.pre_battle_ships)
+	mach_lib.update_mach_lua_log(self.post_battle_ships)
+
 	self.total_ship_casualties = self.pre_battle_ships - self.post_battle_ships
 	self.total_unit_casualties = self.pre_battle_units - self.post_battle_units
 
@@ -355,17 +386,46 @@ function Battle:add_winner_military_force (winner_military_force, is_pre_battle,
 	self.winner_ship_casualties = self.pre_battle_winner_ships - self.post_battle_winner_ships
 	self.winner_unit_casualties = self.pre_battle_winner_units - self.post_battle_winner_units
 
+	self.winner_commander_casualties_list = {}
+	for pre_battle_military_force_idx, pre_battle_military_force in pairs(self.pre_battle_winner_military_forces) do
+		self.winner_commander_casualties_list[pre_battle_military_force.faction_id] = self.winner_commander_casualties_list[pre_battle_military_force.faction_id] or {}
+		local commander_found = false
+		for post_battle_military_force_idx, post_battle_military_force in pairs(self.post_battle_winner_military_forces) do
+			if post_battle_military_force.num_of_units == 0 and post_battle_military_force.num_of_ships == 0 then
+				break
+			elseif pre_battle_military_force.commander_type_and_name == post_battle_military_force.commander_type_and_name then
+				commander_found = true
+				mach_lib.update_mach_lua_log(string.format('Winner commander not killed in battle: %s', pre_battle_military_force.commander_type_and_name))
+			end
+		end
+		if not commander_found then
+			mach_lib.update_mach_lua_log(string.format('Winner commander killed in battle: %s', pre_battle_military_force.commander_type_and_name))
+			self.winner_commander_casualties_list[pre_battle_military_force.faction_id][#self.winner_commander_casualties_list[pre_battle_military_force.faction_id]+1] = pre_battle_military_force.commander_type_and_name
+		end
+	end
+
 	self.winner_unit_casualties_list =  _subtract_unit_tables_in_faction_keys(self.pre_battle_winner_units_list, self.post_battle_winner_units_list)
 	self.winner_ship_casualties_list =  _subtract_unit_tables_in_faction_keys(self.pre_battle_winner_ships_list, self.post_battle_winner_ships_list)
 
 	self.total_soldier_casualties = self.pre_battle_soldiers - self.post_battle_soldiers
+
+	mach_lib.update_mach_lua_log('gibberish1')
+	mach_lib.update_mach_lua_log(self.pre_battle_ships)
+	mach_lib.update_mach_lua_log(self.post_battle_ships)
+
 	self.total_ship_casualties = self.pre_battle_ships - self.post_battle_ships
 	self.total_unit_casualties = self.pre_battle_units - self.post_battle_units
 	self.total_ship_casualties_list =  _subtract_unit_tables_in_faction_keys(self.pre_battle_ships_list, self.post_battle_ships_list)
 	self.total_unit_casualties_list =  _subtract_unit_tables_in_faction_keys(self.pre_battle_units_list, self.post_battle_units_list)
 
 	self.is_naval_battle = self.is_naval_battle or winner_military_force.is_naval
-
+	if self.is_naval_battle then
+		self.winner_ship_prizes_list = _get_ship_captured_list(self.pre_battle_winner_ships_list, self.post_battle_winner_ships_list)
+		self.winner_ship_prizes = #self.winner_ship_prizes_list
+		self.loser_ship_captured_list = self.winner_ship_prizes_list
+		self.loser_ship_captured = #self.loser_ship_captured_list
+	end
+	self.is_major_battle = _is_major_battle(self)
 	mach_lib.update_mach_lua_log(string.format('Finished adding winner military force to Battle object of "%s" units and "%s" ships under command of "%s" of "%s" and is_pre_battle "%s".', winner_military_force.num_of_units, winner_military_force.num_of_ships, winner_military_force.commander_name, winner_military_force.faction_id, tostring(is_pre_battle)))
 end
 
@@ -618,30 +678,95 @@ function _get_number_of_battles_with_same_name(initial_battle_name)
 end
 
 
+function _get_ship_captured_list(pre_battle_faction_ships_list, post_battle_faction_ships_list)
+	mach_lib.update_mach_lua_log(string.format('Getting ships captured list.'))
+	local ship_captured_list = {}
+	local found = false
+	mach_lib.update_mach_lua_log(string.format('test'))
+	for post_battle_faction_key, post_battle_faction_ships_list in pairs(post_battle_faction_ships_list) do
+		mach_lib.update_mach_lua_log(string.format(post_battle_faction_key))
+		for post_battle_ship_idx, post_battle_ship in pairs(post_battle_faction_ships_list) do
+			for pre_battle_faction_key, pre_battle_faction_ships_list in pairs(pre_battle_faction_ships_list) do
+				mach_lib.update_mach_lua_log(string.format(pre_battle_faction_key))
+				for pre_battle_ship_idx, pre_battle_ship in pairs(pre_battle_faction_ships_list) do
+					if post_battle_ship.unit_id == pre_battle_ship.unit_id then
+						found = true
+						break
+					end
+				end
+				if found then
+					break
+				end
+			end
+			if not found then
+				ship_captured_list[post_battle_faction_key] = post_battle_ship
+			end
+		end
+	end
+	mach_lib.update_mach_lua_log(string.format('Finished getting ships captured list. %s ships captured.', #ship_captured_list))
+	return ship_captured_list
+end
+
+
 function _is_major_battle(battle)
 	mach_lib.update_mach_lua_log('Determining if battle is a "Major Battle".')
 	local is_major_battle = nil
-	local total_side_factions_number_of_soldiers = 0
-	local total_side_factions_number_of_ships = 0
+	local rebels_are_losers = false
+	local total_loser_factions_number_of_soldiers = 0
+	local total_loser_factions_number_of_ships = 0
 	for loser_faction_ids_idx = 1, #battle.loser_faction_ids do
 		local loser_faction_id = battle.loser_faction_ids[loser_faction_ids_idx]
 		mach_lib.update_mach_lua_log(string.format('loser faction id: "%s"', loser_faction_id))
+		if loser_faction_id == 'rebels' then
+			rebels_are_losers = true
+		end
+
 		if not battle.is_naval_battle then
-			total_side_factions_number_of_soldiers = total_side_factions_number_of_soldiers + mach_lib.get_faction_num_of_soldiers(loser_faction_id)
+			total_loser_factions_number_of_soldiers = total_loser_factions_number_of_soldiers + mach_lib.get_faction_num_of_soldiers(loser_faction_id)
 		else
-			total_side_factions_number_of_ships = total_side_factions_number_of_ships + mach_lib.get_faction_num_of_ships(loser_faction_id)
+			total_loser_factions_number_of_ships = total_loser_factions_number_of_ships + mach_lib.get_faction_num_of_ships(loser_faction_id)
 		end
 	end
+	mach_lib.update_mach_lua_log(total_loser_factions_number_of_soldiers)
+	mach_lib.update_mach_lua_log(total_loser_factions_number_of_ships)
+	mach_lib.update_mach_lua_log(battle.is_naval_battle)
+	mach_lib.update_mach_lua_log(battle.total_soldier_casualties)
+	mach_lib.update_mach_lua_log(mach_config.__MACH_MAJOR_BATTLE_MIN_TOTAL_SOLDIER_CASUALTIES__)
+	mach_lib.update_mach_lua_log(mach_lib.__unit_scale_factor__)
+	mach_lib.update_mach_lua_log(battle.loser_soldier_casualties)
+	mach_lib.update_mach_lua_log(mach_config.__MACH_MAJOR_BATTLE_MIN_PERCENTAGE_OF_TOTAL_LOSER_FORCES_AS_CASUALTIES__)
+	mach_lib.update_mach_lua_log('test1')
+	mach_lib.update_mach_lua_log(battle.total_ship_casualties)
+	mach_lib.update_mach_lua_log(mach_config.__MACH_MAJOR_BATTLE_MIN_TOTAL_SHIP_CASUALTIES__)
+	mach_lib.update_mach_lua_log(battle.loser_ship_casualties)
+	mach_lib.update_mach_lua_log(mach_config.__MACH_MAJOR_BATTLE_MIN_LAND_UNIT_ON_SHIP_CASUALTIES__)
+	mach_lib.update_mach_lua_log(battle.loser_unit_casualties)
+	mach_lib.update_mach_lua_log('test2')
+	mach_lib.update_mach_lua_log(battle.is_siege)
+	mach_lib.update_mach_lua_log(battle.winner_is_attacker)
+	mach_lib.update_mach_lua_log(battle.loser_unit_casualties)
+	mach_lib.update_mach_lua_log(battle.winner_ship_casualties)
+	mach_lib.update_mach_lua_log(battle.winner_unit_casualties)
 
-	if (battle.is_siege and battle.winner_is_attacker) or
-	(not battle.is_naval_battle and
-			(battle.loser_soldier_casualties >= mach_config.__MACH_MAJOR_BATTLE_MIN_SOLDIER_CASUALTIES__ and
-			battle.total_soldier_casualties >= total_side_factions_number_of_soldiers * mach_config.__MACH_MAJOR_BATTLE_MIN_PERCENTAGE_OF_TOTAL_SIDE_FORCES_AS_CASUALTIES__ * mach_lib.__unit_scale_factor__)) or
-			(battle.is_naval_battle and
-					(battle.total_ship_casualties >= mach_config.__MACH_MAJOR_BATTLE_MIN_SHIP_CASUALTIES__ and
-							battle.loser_ship_casualties >= total_side_factions_number_of_ships * mach_config.__MACH_MAJOR_BATTLE_MIN_PERCENTAGE_OF_TOTAL_SIDE_FORCES_AS_CASUALTIES__) or
-					(battle.total_unit_casualties >= mach_config.__MACH_MAJOR_BATTLE_MIN_SOLDIER_ON_SHIP_CASUALTIES__)) then
-
+	if rebels_are_losers == true and not (battle.is_siege and battle.winner_is_attacker) then
+		mach_lib.update_mach_lua_log('Battle loser was "rebels", and not a siege and attacker is winner. Not a major battle.')
+		is_major_battle = false
+	elseif (battle.is_siege and battle.winner_is_attacker) then
+		mach_lib.update_mach_lua_log('Battle is a siege and attacker is winner. A major battle.')
+		is_major_battle = true
+		mach_lib.update_mach_lua_log('Battle is a "Major Battle"!')
+	elseif (not battle.is_naval_battle and
+			(battle.total_soldier_casualties >= mach_config.__MACH_MAJOR_BATTLE_MIN_TOTAL_SOLDIER_CASUALTIES__ * mach_lib.__unit_scale_factor__ and
+			battle.loser_soldier_casualties >= (total_loser_factions_number_of_soldiers + battle.loser_soldier_casualties) * mach_config.__MACH_MAJOR_BATTLE_MIN_PERCENTAGE_OF_TOTAL_LOSER_FORCES_AS_CASUALTIES__ * mach_lib.__unit_scale_factor__)) then
+		mach_lib.update_mach_lua_log(string.format('Battle is not a naval battle. Total soldier casualties "%s" >= "%s" * "%s", and total loser solider casualties "%s" are >= total loser factions number of soldiers "%s" + "%s" * "%s" * unit scale factor "%s". A major battle.', battle.total_soldier_casualties, mach_config.__MACH_MAJOR_BATTLE_MIN_TOTAL_SOLDIER_CASUALTIES__, tostring(mach_lib.__unit_scale_factor__), battle.loser_soldier_casualties, total_loser_factions_number_of_soldiers, battle.loser_soldier_casualties, tostring(mach_config.__MACH_MAJOR_BATTLE_MIN_PERCENTAGE_OF_TOTAL_LOSER_FORCES_AS_CASUALTIES__), tostring(mach_lib.__unit_scale_factor__)))
+		is_major_battle = true
+		mach_lib.update_mach_lua_log('Battle is a "Major Battle"!')
+	elseif (battle.is_naval_battle and
+					(battle.total_ship_casualties >= mach_config.__MACH_MAJOR_BATTLE_MIN_TOTAL_SHIP_CASUALTIES__ and
+							((battle.loser_ship_casualties >= (total_loser_factions_number_of_ships + battle.loser_ship_casualties) * mach_config.__MACH_MAJOR_BATTLE_MIN_PERCENTAGE_OF_TOTAL_LOSER_FORCES_AS_CASUALTIES__) or
+					(battle.loser_unit_casualties >= mach_config.__MACH_MAJOR_BATTLE_MIN_LAND_UNIT_ON_SHIP_CASUALTIES__)))) then
+		mach_lib.update_mach_lua_log('testsadfasdf')
+		mach_lib.update_mach_lua_log(string.format('Battle is a naval battle. Total ship casualties "%s" >= "%s", and loser ship casualties "%s" are >= total loser factions number of ships "%s" + "%s" * "%s", or loser unit casualties "%s" >= "%s". A major battle.', battle.total_ship_casualties, mach_config.__MACH_MAJOR_BATTLE_MIN_TOTAL_SHIP_CASUALTIES__, battle.loser_ship_casualties, total_loser_factions_number_of_ships, battle.loser_ship_casualties, tostring(mach_config.__MACH_MAJOR_BATTLE_MIN_PERCENTAGE_OF_TOTAL_LOSER_FORCES_AS_CASUALTIES__), battle.loser_unit_casualties, tostring(mach_lib.__MACH_MAJOR_BATTLE_MIN_LAND_UNIT_ON_SHIP_CASUALTIES__)))
 		is_major_battle = true
 		mach_lib.update_mach_lua_log('Battle is a "Major Battle"!')
 	else

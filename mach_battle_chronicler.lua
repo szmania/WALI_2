@@ -14,7 +14,13 @@ function mach_battle_chronicler()
     local __winner_unit_seen__ = false
     local __loser_unit_seen__ = false
     local __rebel_character_completed_battle__ = false
-
+    local __entity_lists_panel_opened__ = false
+    local __regions_tab_opened__ = false
+    local __regions_tab_tooltip__
+    local __regions_column_header_tooltip__
+    local __population_column_header_tooltip__
+    local __public_order_column_header_tooltip__
+    local __income_column_header_tooltip__
 
     function _get_battle_message_image(battle)
         mach_lib.update_mach_lua_log('Getting battle message image.')
@@ -57,9 +63,15 @@ function mach_battle_chronicler()
         end
         title = title..'\nThe '..battle.battle_name
 
-        local winner_faction_names_str = _get_faction_names_str(battle.winner_faction_ids)
+        local winner_faction_names_str = mach_lib.get_battle_faction_names_str(battle.winner_faction_ids)
+        if winner_faction_names_str == 'Rebels' then
+            battle.winner_faction_ids = {'rebels'}
+        end
         local winner_commander_names_str = _get_commander_names_str(battle.winner_full_commander_names)
-        local loser_faction_names_str = _get_faction_names_str(battle.loser_faction_ids)
+        local loser_faction_names_str = mach_lib.get_battle_faction_names_str(battle.loser_faction_ids)
+        if loser_faction_names_str == 'Rebels' then
+            battle.loser_faction_ids = {'rebels'}
+        end
         local loser_commander_names_str = _get_commander_names_str(battle.loser_full_commander_names)
 
         local text = ''
@@ -77,13 +89,20 @@ function mach_battle_chronicler()
         local winner_details_str = _get_side_details_str(true, battle, winner_faction_names_str, winner_commander_names_str)
         text = text..winner_details_str
         text = text..'\n\nUnits lost by victors:'
-        local winner_unit_details_str = _get_unit_details_str(true, battle)
+        local winner_unit_details_str = _get_unit_details_str(true, false, battle)
         text = text..winner_unit_details_str
+        if battle.is_naval_battle or mach_lib.is_value_in_table('MACH Capture Artillery', mach.__mach_features_enabled__) then
+            local winner_unit_captured_details_str = _get_unit_details_str(true, true, battle)
+            if winner_unit_captured_details_str ~= '' then
+                text = text..'\n\nUnits captured by victors:'
+                text = text..winner_unit_captured_details_str
+            end
+        end
 
         local loser_details_str = _get_side_details_str(false, battle, loser_faction_names_str, loser_commander_names_str)
         text = text..loser_details_str
         text = text..'\n\nUnits lost by losers:'
-        local loser_unit_details_str = _get_unit_details_str(false, battle)
+        local loser_unit_details_str = _get_unit_details_str(false, false, battle)
         text = text..loser_unit_details_str
 
         if not battle.is_naval_battle then
@@ -118,25 +137,6 @@ function mach_battle_chronicler()
 
         mach_lib.update_mach_lua_log(string.format('Finished getting commander names str from commander name list: "%s"', commander_names_str))
         return commander_names_str
-    end
-
-
-    function _get_faction_names_str(faction_ids)
-        mach_lib.update_mach_lua_log('Getting faction names str from faction ids list.')
-        local faction_names_str = ''
-        for faction_id_idx = 1, #faction_ids do
-            local faction_id = faction_ids[faction_id_idx]
-            if faction_id_idx == 1 then
-                faction_names_str = mach_lib.get_faction_screen_name_from_faction_id(faction_id)
-            else
-                faction_names_str = faction_names_str..", "..mach_lib.get_faction_screen_name_from_faction_id(faction_id)
-            end
-        end
-        mach_lib.update_mach_lua_log(string.format('Finished getting faction names str from faction ids list: "%s"', faction_names_str))
-        if faction_names_str == '' then
-            faction_names_str = 'Rebels'
-        end
-        return faction_names_str
     end
 
 
@@ -318,48 +318,67 @@ function mach_battle_chronicler()
     end
 
 
-    function _get_unit_details_str(is_winner, battle)
+    function _get_unit_details_str(is_winner, get_captured, battle)
         mach_lib.update_mach_lua_log('Getting unit details str for message box.')
         local casualties_list = {}
         local side_faction_ids = {}
+        local side_commander_casualties_list = {}
 
         if is_winner then
             side_faction_ids = battle.winner_faction_ids
+            side_commander_casualties_list = battle.winner_commander_casualties_list
             if not battle.is_naval_battle then
-                casualties_list = battle.winner_unit_casualties_list
+                if not get_captured then
+                    casualties_list = battle.winner_unit_casualties_list
+                else
+                    mach_lib.update_mach_lua_log('Getting winner prize unit details str for message box.')
+                    casualties_list = battle.winner_unit_prizes_list
+                end
             else
-                casualties_list = mach_lib.concat_tables(battle.winner_ship_casualties_list, battle.winner_unit_casualties_list)
+                if not get_captured then
+                    casualties_list = mach_lib.concat_tables(battle.winner_ship_casualties_list, battle.winner_unit_casualties_list)
+                else
+                    mach_lib.update_mach_lua_log('Getting winner prize ship details str for message box.')
+                    casualties_list = battle.winner_ship_prizes_list
+                end
             end
         else
             side_faction_ids = battle.loser_faction_ids
+            side_commander_casualties_list = battle.loser_commander_casualties_list
             if not battle.is_naval_battle then
-                casualties_list = battle.loser_unit_casualties_list
+                if not get_captured then
+                    casualties_list = battle.loser_unit_casualties_list
+                else
+                    mach_lib.update_mach_lua_log('Getting loser captured unit details str for message box.')
+                    casualties_list = battle.loser_unit_captured_list
+                end
             else
-                casualties_list = mach_lib.copy_table(battle.loser_ship_casualties_list)
-                for side_faction_idx=1, #side_faction_ids do
-                    local side_faction_id = side_faction_ids[side_faction_idx]
-                    if battle.loser_unit_casualties_list[side_faction_id] then
-                        for unit_address, unit in  pairs(battle.loser_unit_casualties_list[side_faction_id]) do
-                            casualties_list[side_faction_idx][unit_address] = unit
+                if not get_captured then
+                    casualties_list = mach_lib.copy_table(battle.loser_ship_casualties_list)
+                    for side_faction_idx=1, #side_faction_ids do
+                        local side_faction_id = side_faction_ids[side_faction_idx]
+                        if battle.loser_unit_casualties_list[side_faction_id] then
+                            for unit_address, unit in  pairs(battle.loser_unit_casualties_list[side_faction_id]) do
+                                casualties_list[side_faction_idx][unit_address] = unit
+                            end
                         end
                     end
+                else
+                    mach_lib.update_mach_lua_log('Getting loser captured ship details str for message box.')
+                    casualties_list = battle.loser_ship_captured_list
                 end
             end
         end
 
         local unit_details_str = ''
-
         for side_faction_idx=1, #side_faction_ids do
             local side_faction_id = side_faction_ids[side_faction_idx]
             if casualties_list[side_faction_id] then
                 unit_details_str = unit_details_str..string.format('\n- %s:', mach_lib.get_faction_screen_name_from_faction_id(side_faction_id))
-                mach_lib.update_mach_lua_log('shower')
-                mach_lib.update_mach_lua_log(side_faction_id)
-                mach_lib.update_mach_lua_log(#casualties_list[side_faction_id])
+                for commander_casualty_idx, commander_casualty in pairs(side_commander_casualties_list[side_faction_id]) do
+                    unit_details_str = unit_details_str..string.format('\n- * Commander "%s" (killed)', commander_casualty)
+                end
                 for address, unit in  pairs(casualties_list[side_faction_id]) do
-                    mach_lib.update_mach_lua_log(address)
-                    mach_lib.update_mach_lua_log('something')
-                    mach_lib.update_mach_lua_log(unit.unit_name)
                     if unit.regiment_name then
                         if unit.is_naval then
                             if not unit.regiment_name == '' then
@@ -409,10 +428,11 @@ function mach_battle_chronicler()
         local character_battles = mach_lib.get_battles_with_character_name(pop_up_charater_name, military_force.faction_id)
         local battle_history_str = 'Character Battle History\n\n'
         for character_battle_idx, character_battle in pairs(character_battles) do
+            local combatant_faction_str = string.format('(%s vs %s)', mach_lib.get_battle_faction_names_str(character_battle.winner_faction_ids), mach_lib.get_battle_faction_names_str(character_battle.loser_faction_ids))
             if mach_lib.is_value_in_table(military_force.faction_id, character_battle.winner_faction_ids) then
-                battle_history_str = battle_history_str..'* '..character_battle.battle_name..' (Victor)\n\n'
+                battle_history_str = battle_history_str..'* '..character_battle.battle_name..' (Victor) '..combatant_faction_str..'\n\n'
             else
-                battle_history_str = battle_history_str..'* '..character_battle.battle_name..' (Loser)\n\n'
+                battle_history_str = battle_history_str..'* '..character_battle.battle_name..' (Loser) '..combatant_faction_str..'\n\n'
             end
         end
         if battle_history_str ~= 'Character Battle History\n\n' then
@@ -422,6 +442,199 @@ function mach_battle_chronicler()
         mach_lib.update_mach_lua_log(string.format('Finished populating character info popup with battle history.'))
         return true
     end
+
+
+    function _populate_entity_lists_regions_with_battle_history()
+        mach_lib.update_mach_lua_log(string.format('Populating entity_lists "regions" tab with battle history. Battle number: %s', #mach_data.__battles_list__))
+        local region_dy_ui = UIComponent(mach_lib.__wali_m_root__:Find("region_dy"))
+--        mach_lib.update_mach_lua_log(region_dy_ui)
+
+        --                local region_dy_ui = UIComponent(mach_lib.__wali_m_root__:Find("region_dy"))
+--        mach_lib.update_mach_lua_log(region_dy_ui:GetStateText())
+        local population_ui = UIComponent(mach_lib.__wali_m_root__:Find("population"))
+--        mach_lib.update_mach_lua_log('garbage1')
+--        mach_lib.update_mach_lua_log(population_ui:GetStateText())
+--        mach_lib.update_mach_lua_log("garbage2b")
+        local tabgroup_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("tabgroup"))
+--        mach_lib.update_mach_lua_log("garbage2c")
+--        mach_lib.update_mach_lua_log(tabgroup_ui_component:ChildCount())
+
+        --            local tab_ui = UIComponent(tabgroup_ui:Find("3"))
+        --            mach_lib.update_mach_lua_log(tab_ui)
+        --            mach_lib.update_mach_lua_log(tab_ui:GetStateText())
+--        mach_lib.update_mach_lua_log("garbage2d")
+        local tab_ui_component = UIComponent(tabgroup_ui_component:Find("regions"))
+--        mach_lib.update_mach_lua_log(tab_ui_component)
+--        mach_lib.update_mach_lua_log("garbage2e")
+--        mach_lib.update_mach_lua_log(tab_ui_component:ChildCount())
+--        mach_lib.update_mach_lua_log(tab_ui_component:GetStateText())
+--        mach_lib.update_mach_lua_log(UIComponent(tab_ui_component:Find(0)):GetStateText())
+--        mach_lib.update_mach_lua_log(UIComponent(tab_ui_component:Find(1)):GetStateText())
+        __regions_tab_tooltip__ = tab_ui_component:GetTooltipText()
+        UIComponent(tab_ui_component:Find(1)):SetStateText("Battles")
+        tab_ui_component:SetTooltipText("Shows battles of all factions. \n\nLeft click on battle to got battle location. Right click on battle to show its event message.", true)
+--        mach_lib.update_mach_lua_log("garbage2ea")
+
+--        mach_lib.update_mach_lua_log(UIComponent(tab_ui_component:Find(0)):ChildCount())
+--        mach_lib.update_mach_lua_log(UIComponent(tab_ui_component:Find(1)):ChildCount())
+--        mach_lib.update_mach_lua_log("garbage2eb")
+
+--        mach_lib.update_mach_lua_log(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(0)):ChildCount())
+--        mach_lib.update_mach_lua_log(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(1)):ChildCount())
+--        mach_lib.update_mach_lua_log(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):ChildCount())
+--        mach_lib.update_mach_lua_log(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(3)):ChildCount())
+--        mach_lib.update_mach_lua_log(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(4)):ChildCount())
+--        mach_lib.update_mach_lua_log(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(5)):ChildCount())
+--        mach_lib.update_mach_lua_log("garbage2ec")
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(0)):Find(0)):SetStateText("Battle Name & Location")
+        __regions_column_header_tooltip__ = UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(0)):GetTooltipText()
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(0)):SetTooltipText('Shows battle name (year) and location. \n\nSorts by location.', true)
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(1)):Find(0)):SetStateText("Participants")
+        __population_column_header_tooltip__ = UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(1)):GetTooltipText()
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(1)):SetTooltipText('Shows factions participating in battle (winners vs losers).', true)
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(2)):Find(0)):SetStateText("Battle Type")
+        __public_order_column_header_tooltip__ = UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(2)):GetTooltipText()
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(2)):SetTooltipText('Shows battle type. Crossed swords indicate major battle, anchor indicates naval battle and breastworks indicate a siege. \n\nSorts by major battle.', true)
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(3)):Find(0)):SetStateText("Casualties & Year, Turn")
+        __income_column_header_tooltip__ = UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(3)):GetTooltipText()
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(3)):SetTooltipText('Shows total battle casualties (soldiers and/or ships), and year and turn of battle. \n\nSorts by turn.', true)
+
+--        mach_lib.update_mach_lua_log("garbage2f")
+        local list_box_ui = tab_ui_component:Find("list_box")
+        local list_box_ui_component = UIComponent(list_box_ui)
+--        mach_lib.update_mach_lua_log(list_box_ui)
+--        mach_lib.update_mach_lua_log("garbage2g")
+--        mach_lib.update_mach_lua_log(list_box_ui_component)
+--        mach_lib.update_mach_lua_log(list_box_ui_component:GetStateText())
+--        mach_lib.update_mach_lua_log("garbage2h")
+--        mach_lib.update_mach_lua_log(list_box_ui_component:ChildCount())
+
+        --            local tab = UIComponent(entity_lists:Find("3"))
+        --            local entity_lists_ui = mach_lib.__wali_m_root__:Find('entity_lists')
+        --            mach_lib.update_mach_lua_log("garbage2e")
+        --            mach_lib.update_mach_lua_log(entity_lists_ui:GetStateText())
+--        mach_lib.update_mach_lua_log("garbage3")
+        --            local list_box_ui = mach_lib.__wali_m_root__:Find("list_box")
+        --            mach_lib.update_mach_lua_log(list_box_ui)
+--        mach_lib.update_mach_lua_log("garbage3a")
+        --            local list_box_ui_component = UIComponent(list_box_ui)
+        --            mach_lib.update_mach_lua_log(list_box_ui_component)
+        --            mach_lib.update_mach_lua_log(list_box_ui_component:GetStateText())
+--        mach_lib.update_mach_lua_log("garbage3b")
+        --            mach_lib.update_mach_lua_log(list_box_ui_component:ChildCount())
+        list_box_ui_component:DestroyChildren()
+        mach_lib.update_mach_lua_log(list_box_ui_component:ChildCount())
+--        mach_lib.update_mach_lua_log("garbage3c")
+        --            mach_lib.update_mach_lua_log(list_box_ui_component:ChildCount())
+--        mach_lib.update_mach_lua_log("garbage4")
+        local regions_tab_ui = mach_lib.__wali_m_root__:Find("regions")
+--        mach_lib.update_mach_lua_log(regions_tab_ui)
+        local regions_tab_ui_component = UIComponent(regions_tab_ui)
+--        mach_lib.update_mach_lua_log(regions_tab_ui_component:GetStateText())
+--        mach_lib.update_mach_lua_log(regions_tab_ui_component)
+--        regions_tab_ui_component:SetStateText('Battles')
+--        mach_lib.update_mach_lua_log("garbage4a")
+--        mach_lib.update_mach_lua_log(regions_tab_ui_component:ChildCount())
+--        mach_lib.update_mach_lua_log("garbage4b")
+        regions_tab_ui_component:Visible(true)
+--        mach_lib.update_mach_lua_log("garbage4c")
+
+        local tab_title_ui = mach_lib.__wali_m_root__:Find("tab_title")
+        mach_lib.update_mach_lua_log(tab_title_ui)
+        local tab_title_ui_component = UIComponent(tab_title_ui)
+        mach_lib.update_mach_lua_log(tab_title_ui_component)
+        mach_lib.update_mach_lua_log(tab_title_ui_component:GetStateText())
+--        tab_title_ui_component:SetVisible(false)
+
+
+--        mach_lib.update_mach_lua_log("garbage4d")
+        local public_order_title_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("public_order_title"))
+        public_order_title_ui_component:SetStateText('Year')
+
+--        local tabgroup_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("tabgroup"))
+--        mach_lib.update_mach_lua_lot(tabgroup_ui_component)
+--        mach_lib.update_mach_lua_lot(tabgroup_ui_component:ChildCount())
+--        local regions_tab_ui_2 = tabgroup_ui_component:Find(2)
+--        mach_lib.update_mach_lua_lot(regions_tab_ui_2)
+--        mach_lib.update_mach_lua_lot(regions_tab_ui_2:GetStateText())
+
+        --        local player_faction_region_count = #CampaignUI.RetrieveFactionRegionList(CampaignUI.PlayerFactionId())
+        local player_faction_region_count = 0
+--        mach_lib.update_mach_lua_log("garbage5")
+
+--        local utils = require("Utilities")
+--        local panel_manager = utils.Require("PanelManager")
+--        mach_lib.update_mach_lua_log("garbage5a")
+--        local lists_panel = panel_manager.IsPanelOpen("entity_lists")
+--        mach_lib.update_mach_lua_log("garbage5b")
+--        if lists_panel ~= nil then
+--            UIComponent(lists_panel):LuaCall("Reinitialise")
+--        end
+
+        for battle_idx, battle in pairs(mach_data.__battles_list__) do
+            player_faction_region_count = player_faction_region_count + 1
+            mach_lib.update_mach_lua_log(player_faction_region_count)
+            mach_lib.update_mach_lua_log("item"..tostring(player_faction_region_count))
+
+--            mach_lib.update_mach_lua_log("garbage5c")
+
+--            mach_lib.update_mach_lua_log("garbage5e")
+            local battle_item = UIComponent(Component.CreateComponentFromTemplate("row_template_region", "item" .. tostring(player_faction_region_count), list_box_ui, 0, 0))
+--            mach_lib.update_mach_lua_log("garbage5a")
+            battle_item:LuaCall("Initialise", battle, true)
+--            mach_lib.update_mach_lua_log("garbage5b")
+            mach_lib.update_mach_lua_log(list_box_ui_component:ChildCount())
+--            mach_lib.update_mach_lua_log("garbage6")
+
+            battle_item:SetEventCallback("OnMouseLClickUp", function()
+                CampaignUI.SetCameraTarget(battle.pos_x, battle.pos_y)
+            end)
+
+--            local m_last_sort = {}
+--            m_last_sort["regions"] = {0, false }
+--            mach_lib.update_mach_lua_log("garbage6a")
+--            local m_tabs = {}
+--            m_tabs["regions"] = {}
+--            m_tabs["regions"].tab =  UIComponent(tabgroup_ui_component:Find("regions"))
+--            local tab_find_ui = m_tabs["regions"].tab:Find(0)
+--            mach_lib.update_mach_lua_log(tab_find_ui)
+--            local sortable_list = UIComponent(tab_find_ui)
+--            mach_lib.update_mach_lua_log("garbage6aa")
+--            local entity_lists = loadfile("ui/campaign ui/entity_lists_scripts/entity_lists")
+--            mach_lib.update_mach_lua_log("garbage6ab")
+--            entity_lists.RecolorList(sortable_list)
+--            mach_lib.update_mach_lua_log("garbage6ac")
+--            sortable_list:SetGlobal("g_notify_func", entity_lists.Sorted)
+--            mach_lib.update_mach_lua_log("garbage6ad")
+
+--            m_last_sort["regions"] = {
+--                Component.CallByAddress(m_tabs["regions"].tab:Find(0), "LuaCall", "LastSorted")
+--            }
+--            mach_lib.update_mach_lua_log("garbage6b")
+--            mach_lib.update_mach_lua_log(m_tabs.regions.tab)
+--            mach_lib.update_mach_lua_log(m_tabs.regions.tab:Find(0))
+--            mach_lib.update_mach_lua_log("garbage6c")
+--            mach_lib.update_mach_lua_log(m_last_sort.regions[1])
+--            mach_lib.update_mach_lua_log(m_last_sort.regions[2])
+--
+--            local region_column_ui_component = UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(0)):Find(0))
+--            mach_lib.update_mach_lua_log("garbage6d")
+--
+--            Component.CallByAddress(m_tabs.regions.tab:Find(0), "LuaCall", "InitialSort", m_last_sort.regions[1], m_last_sort.regions[2])
+
+--            mach_lib.update_mach_lua_log("garbage7")
+
+        end
+--        mach_lib.update_mach_lua_log("garbage8")
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(0)):ForceEvent("OnMouseLClickUp")
+
+        mach_lib.update_mach_lua_log(string.format('Finished populating entity_lists "regions" tab with battle history.'))
+    end
+
 
     function _populate_unit_info_popup_with_battle_history()
         mach_lib.update_mach_lua_log(string.format('Populating unit info popup with battle history.'))
@@ -464,19 +677,20 @@ function mach_battle_chronicler()
             mach_lib.update_mach_lua_log(unit_men)
             mach_lib.update_mach_lua_log(pop_up_unit_experience)
             mach_lib.update_mach_lua_log(unit.experience)
+            local g_textview = UIComponent(mach_lib.__wali_m_root__:Find("TextView"))
+            local g_textview_text = UIComponent(mach_lib.__wali_m_root__:Find("Text"))
             mach_lib.update_mach_lua_log('bugger5')
 
-            if pop_up_unit_regiment_name == unit.regiment_name and pop_up_unit_name == unit.unit_name and pop_up_unit_men == unit_men and pop_up_unit_experience == tostring(unit.experience) then
+            if pop_up_unit_regiment_name == unit.regiment_name and pop_up_unit_name == unit.unit_name and pop_up_unit_men == unit_men and pop_up_unit_experience == tostring(unit.experience) and g_textview_text:GetStateText():find('Unit Battle History') == nil  then
                 mach_lib.update_mach_lua_log('crap')
-                local g_textview = UIComponent(mach_lib.__wali_m_root__:Find("TextView"))
-                local g_textview_text = UIComponent(mach_lib.__wali_m_root__:Find("Text"))
                 local unit_battles = mach_lib.get_battles_with_unit_id(unit.unit_id, unit.faction_id)
                 local battle_history_str = 'Unit Battle History\n'
                 for unit_battle_idx, unit_battle in pairs(unit_battles) do
+                    local combatant_faction_str = string.format('(%s vs %s)', mach_lib.get_battle_faction_names_str(unit_battle.winner_faction_ids), mach_lib.get_battle_faction_names_str(unit_battle.loser_faction_ids))
                     if mach_lib.is_value_in_table(unit.faction_id, unit_battle.winner_faction_ids) then
-                        battle_history_str = battle_history_str..'* '..unit_battle.battle_name..' (Victor)\n'
+                        battle_history_str = battle_history_str..'* '..unit_battle.battle_name..' (Victor) '..combatant_faction_str..'\n'
                     else
-                        battle_history_str = battle_history_str..'* '..unit_battle.battle_name..' (Loser)\n'
+                        battle_history_str = battle_history_str..'* '..unit_battle.battle_name..' (Loser) '..combatant_faction_str..'\n'
                     end
                 end
                 if battle_history_str ~= 'Unit Battle History\n' then
@@ -487,6 +701,51 @@ function mach_battle_chronicler()
         end
         mach_lib.update_mach_lua_log(string.format('Finished populating unit info popup with battle history.'))
         return true
+    end
+
+
+    function _reset_entity_lists_regions_tab()
+        mach_lib.update_mach_lua_log('Resetting "entity_lists" regions tab.')
+        local tabgroup_ui = UIComponent(mach_lib.__wali_m_root__:Find("tabgroup"))
+        local tab_ui_component = UIComponent(tabgroup_ui:Find("regions"))
+        UIComponent(tab_ui_component:Find(1)):SetStateText("Regions")
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(0)):Find(0)):SetStateText("Regions")
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(1)):Find(0)):SetStateText("Population")
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(2)):Find(0)):SetStateText("Public Order")
+
+        UIComponent(UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(3)):Find(0)):SetStateText("Income")
+
+
+--        if __regions_tab_tooltip__ then
+--        tab_ui_component:SetTooltipText(__regions_tab_tooltip__, true)
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(0)):SetTooltipText(__regions_column_header_tooltip__, true)
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(1)):SetTooltipText(__population_column_header_tooltip__, true)
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(2)):SetTooltipText(__public_order_column_header_tooltip__, true)
+        UIComponent(UIComponent(UIComponent(tab_ui_component:Find(0)):Find(2)):Find(3)):SetTooltipText(__income_column_header_tooltip__, true)
+--        end
+        local upper_class_reaction_icon_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("upper_class_reaction_icon", true))
+        local major_battle_image = UIImage("data/ui/templates/skins/upper-classes_neutral.tga")
+        mach_lib.update_mach_lua_log('shit13a')
+--        mach_lib.update_mach_lua_log(upper_class_reaction_icon_ui_component:Address())
+        major_battle_image:SetComponentTexture(upper_class_reaction_icon_ui_component:Address(), 0)
+
+        mach_lib.update_mach_lua_log('shit13ab')
+
+        local lower_class_reaction_icon_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("lower_class_reaction_icon", true))
+        local major_battle_image = UIImage("data/ui/templates/skins/lower-classes_angry.tga")
+        mach_lib.update_mach_lua_log('shit13b')
+        major_battle_image:SetComponentTexture(lower_class_reaction_icon_ui_component:Address(), 0)
+
+        local utils = require("Utilities")
+        local panel_manager = utils.Require("PanelManager")
+        local lists_panel = panel_manager.IsPanelOpen("entity_lists")
+        if lists_panel ~= nil then
+            UIComponent(lists_panel):LuaCall("Reinitialise")
+        end
+        mach_lib.update_mach_lua_log('Finished resetting "entity_lists" regions tab."')
     end
 
 
@@ -502,7 +761,7 @@ function mach_battle_chronicler()
         battle.message_data = {SubTitle = "", MoviePath = "", PosX = battle.pos_x, PosY = battle.pos_y, PosZ = 0}
         battle.message_layout = "standard"
         battle.message_requires_response = false
-        if not battle.is_player_battle then
+        if battle.is_player_battle then
             mach_lib.show_message_box(battle.message_auto_show, battle.message_screen_height, battle.message_screen_width, battle.message_icon, battle.message_text, battle.message_event, battle.message_image, battle.message_title, battle.message_data, battle.message_layout, battle.message_requires_response)
         else
             mach_lib.update_mach_lua_log('Is Player Battle, will not show Battle Message Box.')
@@ -528,7 +787,7 @@ function mach_battle_chronicler()
 --                mach_lib.update_mach_lua_log("Character lost battle.")
 --            end
             __current_battle__ = mach_classes.Battle:new()
-            mach_lib.update_mach_lua_log('Adding time trigger of 0.01 seconds')
+            mach_lib.update_mach_lua_log('Adding time trigger of 0.01 seconds or "battle_processing_completed"')
             mach_lib.scripting.game_interface:add_time_trigger("battle_processing_completed", 0.01)
         end
 
@@ -592,6 +851,49 @@ function mach_battle_chronicler()
     end
 
 
+    local function on_component_left_click_up(context)
+        mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - ComponentLClickUp")
+        if __entity_lists_panel_opened__ then
+            mach_lib.update_mach_lua_log('"entity_lists" panel is opened.')
+            local tabgroup_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("tabgroup"))
+            local tab_ui_component = UIComponent(tabgroup_ui_component:Find("regions"))
+--            mach_lib.update_mach_lua_log(context.component)
+--            mach_lib.update_mach_lua_log(tabgroup_ui_component:Find("regions"))
+            if __regions_tab_tooltip__ and (conditions.IsComponentType("armies", context) or conditions.IsComponentType("fleets", context) or conditions.IsComponentType("agents", context))then
+                mach_lib.update_mach_lua_log('Setting "regions" tab to "Regions"')
+                UIComponent(tab_ui_component:Find(1)):SetStateText("Regions")
+                tab_ui_component:SetTooltipText(__regions_tab_tooltip__, true)
+            end
+
+            if __regions_tab_opened__ and conditions.IsComponentType("regions", context) and context.component == tabgroup_ui_component:Find("regions") then
+                __regions_tab_opened__ = false
+                mach_lib.update_mach_lua_log('Clicked on "regions" tab AGAIN in "entity_lists" panel')
+--                mach_lib.output_table_to_mach_log(context, 1)
+                _populate_entity_lists_regions_with_battle_history()
+            elseif conditions.IsComponentType("regions", context) and context.component == tabgroup_ui_component:Find("regions") then
+                mach_lib.update_mach_lua_log('Clicked on "regions" tab in "entity_lists" panel')
+                __regions_tab_opened__ = true
+                if __regions_tab_tooltip__ then
+                    _reset_entity_lists_regions_tab()
+                end
+            elseif conditions.IsComponentType("armies", context) or conditions.IsComponentType("fleets", context) or conditions.IsComponentType("agents", context) then
+                mach_lib.update_mach_lua_log('Clicked on "armies", "fleets" or "agents" tab in "entity_lists" panel')
+                __regions_tab_opened__ = false
+            else
+
+                --            __entity_lists_panel_opened__ = false
+--                local region_dy_ui = UIComponent(mach_lib.__wali_m_root__:Find("region_dy"))
+--                if region_dy_ui:GetStateText() then
+--                    mach_lib.update_mach_lua_log('Adding time trigger of 0.01 seconds for "entity_lists_regions_populated"')
+--                    mach_lib.scripting.game_interface:add_time_trigger("entity_lists_regions_populated", 0.01)
+--
+--                end
+            end
+        end
+        mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - Finished ComponentLClickUp")
+    end
+
+
     local function on_faction_turn_start(context)
         mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - FactionTurnStart")
         __winner_unit_seen__ = false
@@ -603,6 +905,21 @@ function mach_battle_chronicler()
     local function on_garrison_residence_captured(context)
         mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - GarrisonResidenceCaptured")
 
+    end
+
+
+    local function on_panel_closed_campaign(context)
+        mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - PanelClosedCampaign")
+        --Show battle history in unit info popup
+        if conditions.IsComponentType('entity_lists', context) then
+            mach_lib.update_mach_lua_log('"entity_lists" panel closed.')
+            __entity_lists_panel_opened__ = false
+--            __regions_tab_opened__ = false
+--            local tabgroup_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("tabgroup"))
+--            local tab_ui_component = UIComponent(tabgroup_ui_component:Find("regions"))
+--            UIComponent(tab_ui_component:Find(1)):SetStateText("Regions")
+        end
+        mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - Finished PanelClosedCampaign")
     end
 
 
@@ -618,6 +935,19 @@ function mach_battle_chronicler()
             if not _populate_character_info_popup_with_battle_history() then
                 mach_lib.update_mach_lua_log("Error, could not populate character info pop-up!")
             end
+        elseif conditions.IsComponentType('entity_lists', context) then
+            mach_lib.update_mach_lua_log('"entity_lists" panel opened')
+            __entity_lists_panel_opened__ = true
+
+            --            mach_lib.update_mach_lua_log(context.component)
+            --            mach_lib.update_mach_lua_log(tabgroup_ui_component:Find("regions"))
+            if __regions_tab_tooltip__ then
+                mach_lib.update_mach_lua_log('Resetting "regions" tab to "Regions" and setting tooltip.')
+                local tabgroup_ui_component = UIComponent(mach_lib.__wali_m_root__:Find("tabgroup"))
+                local tab_ui_component = UIComponent(tabgroup_ui_component:Find("regions"))
+                UIComponent(tab_ui_component:Find(1)):SetStateText("Regions")
+                tab_ui_component:SetTooltipText(__regions_tab_tooltip__, true)
+            end
         end
         mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - Finished PanelOpenedCampaign")
     end
@@ -626,6 +956,7 @@ function mach_battle_chronicler()
     local function on_time_trigger(context)
         mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - TimeTrigger")
         if context.string == "battle_processing_completed" then
+            mach_lib.update_mach_lua_log('"battle_processing_completed" time trigger.')
             if __winner_unit_seen__ == true then
                 mach_lib.update_mach_lua_log('Battle winner unit seen.')
                 if __loser_unit_seen__ == false then
@@ -657,6 +988,8 @@ function mach_battle_chronicler()
                 end
                 mach_lib.update_mach_lua_log("Finished processing battle.")
             end
+        elseif context.string == "entity_lists_regions_populated" then
+
         end
         mach_lib.update_mach_lua_log("Machiavelli's Battle Chronicler - Finished TimeTrigger")
     end
@@ -715,10 +1048,12 @@ function mach_battle_chronicler()
 
     mach_lib.scripting.AddEventCallBack("CampaignSettlementAttacked", on_campaign_settlement_attacked)
     mach_lib.scripting.AddEventCallBack("CharacterCompletedBattle", on_character_completed_battle)
+    mach_lib.scripting.AddEventCallBack("ComponentLClickUp", on_component_left_click_up)
     mach_lib.scripting.AddEventCallBack("FactionTurnStart", on_faction_turn_start)
     mach_lib.scripting.AddEventCallBack("GarrisonResidenceCaptured", on_garrison_residence_captured)
+    mach_lib.scripting.AddEventCallBack("PanelClosedCampaign", on_panel_closed_campaign)
     mach_lib.scripting.AddEventCallBack("PanelOpenedCampaign", on_panel_opened_campaign)
-    mach_lib.scripting.AddEventCallBack("TimeTrigger", on_time_trigger) 
+    mach_lib.scripting.AddEventCallBack("TimeTrigger", on_time_trigger)
     mach_lib.scripting.AddEventCallBack("UICreated", on_ui_created)
     mach_lib.scripting.AddEventCallBack("UnitCompletedBattle", on_unit_completed_battle)
 end

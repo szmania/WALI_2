@@ -2,6 +2,7 @@ module(..., package.seeall)
 
 
 WALI = require "WALI/WALI"
+mach = require "WALI/mach"
 mach_lib = require "WALI/mach_lib"
 mach_data = require "WALI/mach_data"
 ti_lib = require "WALI/TI_lib"
@@ -43,6 +44,7 @@ local beginArtilleryTable = {}
 --captures artillery abandoned on battlefield
 function mach_capture_artillery()
 	mach_lib.update_mach_lua_log("Initializing Machiavelli's Capture Artillery Mod.")
+	mach.__mach_features_enabled__[#mach.__mach_features_enabled__+1] = "MACH Capture Artillery"
 
 	local attacker_factionKey = nil
 	local defender_factionKey = nil

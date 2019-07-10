@@ -262,8 +262,9 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 
-# Szmania
+# Machiavelli
 Misc/esf.xml
 Logs/*
 _OLD/
 .idea/
+WIP/*
