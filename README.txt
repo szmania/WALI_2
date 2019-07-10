@@ -12,3 +12,5 @@ WALI.lua:			WALI lua function library, contains all of WALI's Lua side functiona
 					WALI.InitialiseAttrition()
 WALI.pack:			Contains a packed version of the UI files, needed for the scripting to run. Format shouldn't matter,
 					is currently in mod format
+
+More Details: http://www.twcenter.net/forums/showthread.php?604949-W-A-L-I

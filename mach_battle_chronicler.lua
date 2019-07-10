@@ -761,7 +761,7 @@ function mach_battle_chronicler()
         battle.message_data = {SubTitle = "", MoviePath = "", PosX = battle.pos_x, PosY = battle.pos_y, PosZ = 0}
         battle.message_layout = "standard"
         battle.message_requires_response = false
-        if battle.is_player_battle then
+        if not battle.is_player_battle then
             mach_lib.show_message_box(battle.message_auto_show, battle.message_screen_height, battle.message_screen_width, battle.message_icon, battle.message_text, battle.message_event, battle.message_image, battle.message_title, battle.message_data, battle.message_layout, battle.message_requires_response)
         else
             mach_lib.update_mach_lua_log('Is Player Battle, will not show Battle Message Box.')
