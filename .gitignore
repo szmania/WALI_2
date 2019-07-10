@@ -263,8 +263,9 @@ FakesAssemblies/
 *.opt
 
 # Machiavelli
-Misc/esf.xml
-Logs/*
-_OLD/
 .idea/
+_OLD/
+Logs/*
+Misc/esf.xml
 WIP/*
+docs/*
